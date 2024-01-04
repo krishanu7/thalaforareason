@@ -1,12 +1,14 @@
 import React, { useState } from "react";
+import ReactConfetti from "react-confetti";
+import Swal from "sweetalert2";
+
 import Video from "../assets/correct.mp4";
 import Image from "../assets/wrong.png";
 import AudioSample from "../assets/audiofalse.mp3";
 
 const HeroSection = () => {
   const [inputVal, setInputVal] = useState("");
-  const [isThala, setIsThala] = useState(false);
-  const [showResult, setShowResult] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const handleInputVal = (e) => {
     e.preventDefault();
@@ -14,25 +16,83 @@ const HeroSection = () => {
   };
 
   const handleShare = () => {
-    const urlToCopy = window.location.href;
+    let urlToCopy = window.location.origin;
+    const inputText = document.getElementById("snippet").value.trim();
+    if (inputText !== "") urlToCopy = urlToCopy + `?s=${btoa(inputText)}`;
     navigator.clipboard.writeText(urlToCopy);
+    Swal.fire({
+      title: "Success!",
+      text: "Share Url has been copied to your clipboard!",
+      showCloseButton: true,
+      focusConfirm: true,
+      confirmButtonText: '<i class="fa fa-thumbs-up"></i> Great!',
+      confirmButtonAriaLabel: "OK",
+    });
   };
 
   const checkThala = () => {
-    // Your logic for checking if the typed value is related to MSD
-    // For demonstration purposes, checking if the input contains "MSD"
-    const isMSDRelated = inputVal.toLowerCase().includes("msd");
+    const snippet = document.getElementById("snippet").value.trim();
+    let sum = 0;
 
-    // Update the state based on the check
-    setIsThala(isMSDRelated);
+    function thalaFan() {
+      setShowConfetti(true);
+      Swal.fire({
+        title: "Good job!",
+        text: "Thala For A Reason!",
+        width: 500,
+        height: 300,
+        html: `<video autoplay loop class="text-center"><source src="${Video}" type="video/mp4"></video>`,
+        showCloseButton: true,
+        focusConfirm: true,
+        confirmButtonText: '<i class="fa fa-thumbs-up"></i> Great!',
+        confirmButtonAriaLabel: "OK",
+      });
+    }
 
-    // Show the result
-    setShowResult(true);
+    function notTahalFan() {
+      const audio = new Audio(AudioSample);
+      audio.play();
+      Swal.fire({
+        title: "Wrong!",
+        text: "Not Thala For A Reason!",
+        imageUrl: Image,
+        imageWidth: 400,
+        imageHeight: 250,
+        imageAlt: "Not Thala",
+        preConfirm: () => {
+          audio.pause();
+          audio.currentTime = 0;
+        },
+      });
+    }
+
+    if (is_numeric(snippet)) {
+      for (let i = 0; i < snippet.length; i++) {
+        const charVal = parseInt(snippet.charAt(i), 10);
+        if (!isNaN(charVal)) sum += charVal;
+      }
+      if (sum % 7 === 0) {
+        thalaFan();
+      } else {
+        notTahalFan();
+      }
+    } else {
+      sum = snippet.length;
+      if(snippet.toLowerCase()==='msd' || snippet.toLowerCase()==='mahindra singh dhoni'){
+        thalaFan();
+      }else if (sum === 7) {
+        thalaFan();
+      } else {
+        notTahalFan();
+      }
+    }
   };
+
+  const is_numeric = (str) => /^\d+$/.test(str);
 
   return (
     <div className="bg-teal-500 text-slate-100 mt-6 w-[40%] h-[60%] flex flex-col justify-center items-center border-2 border-teal-600 rounded-xl shadow shadow-black text-xl font-sans">
-      <h1 className="text-2xl font-semibold">
+      <h1 className="text-2xl font-semibold sm:px-2">
         Let's check if you are a Thala fan
       </h1>
       <hr className="text-black" />
@@ -51,35 +111,10 @@ const HeroSection = () => {
             checkThala();
           }}
           type="submit"
-          className="p-3 w-[40%] pl-2 pr-2 text-white bg-blue-500 rounded shadow shadow-black"
+          className="p-3 text-lg md:text-lg w-[40%] pl-2 pr-2 text-white bg-blue-500 rounded shadow shadow-black"
         >
           Check Thalavity
         </button>
-      </div>
-      <div className="w-full flex justify-center items-center h-[40%] mb-4">
-        {showResult &&
-          (isThala ? (
-            <video
-              src={Video}
-              width="90%"
-              height="100%"
-              className="rounded"
-              autoPlay
-            >
-              Your browser does not support the video tag.
-            </video>
-          ) : (
-            <div className="flex justify-center items-center">
-              <img
-                src={Image}
-                alt="Thala Image"
-                className="w-[90%] h-full object-cover rounded"
-              />
-              <audio src={AudioSample} autoPlay>
-                Your browser does not support the video tag.
-              </audio>
-            </div>
-          ))}
       </div>
       <button
         onClick={handleShare}
@@ -119,6 +154,25 @@ const HeroSection = () => {
           </svg>
         </a>
       </div>
+      {showConfetti && (
+        <ReactConfetti
+          numberOfPieces={1000}
+          recycle={false}
+          width={window.innerWidth}
+          height={window.innerHeight}
+          drawShape={(ctx) => {
+            ctx.beginPath();
+            for (let i = 0; i < 22; i++) {
+              const angle = 0.35 * i;
+              const x = (0.8 + 1.5 * angle) * Math.cos(angle);
+              const y = (0.8 + 1.5 * angle) * Math.sin(angle);
+              ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.closePath();
+          }}
+        />
+      )}
     </div>
   );
 };
